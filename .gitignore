@@ -37,5 +37,21 @@
 *.out
 *.app
 
-# debug information files
+# Debug information files
 *.dwo
+
+# Ignore build and temporary files
+build/
+*.user
+*.pro.user
+*.log
+
+# Ignore Qt Creator and Clang cache
+*.qtc_clangd/
+*.cache/
+*.idx
+
+# Ignore OS and IDE junk
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,4 @@
+#ifndef BOARDSQUARE_H
+#define BOARDSQUARE_H
+
+#endif // BOARDSQUARE_H
