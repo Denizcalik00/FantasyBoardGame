@@ -1,7 +1,7 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#endif // ITEM_H
+
 
 #include <string>
 
@@ -53,4 +53,5 @@ public:
     virtual void removeEffect(Character &c) = 0;
 };
 
+#endif // ITEM_H
 
