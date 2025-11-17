@@ -1,7 +1,7 @@
 #ifndef RING_H
 #define RING_H
 
-#endif // RING_H
+
 
 #include "Item.h"
 
@@ -24,3 +24,5 @@ public:
     void applyEffect(Character &c);
     void removeEffect(Character &c);
 };
+
+#endif // RING_H
