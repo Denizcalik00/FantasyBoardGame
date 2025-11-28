@@ -5,15 +5,26 @@
 #include "Ring.h"
 #include "Utility.h"
 
-/*
- PSEUDOCODE - Item::createRandomItem()
-   rand = Utility::randInt(0,3)
-   case 0: return Weapon
-   case 1: return Armour
-   case 2: return Shield
-   case 3: return Ring
-*/
+/**
+ * @file Item.cpp
+ * @brief Implements factory function to create random items.
+ *
+ * Responsibilities:
+ *  - Generate a random Item of type Weapon, Armour, Shield, or Ring.
+ *  - Uses Utility::randInt() for random selection.
+ */
 
+/**
+ * @brief Creates a random Item instance.
+ *
+ * Randomly selects one of four item types:
+ *  - Weapon
+ *  - Armour
+ *  - Shield
+ *  - Ring
+ *
+ * @return Unique pointer to the newly created Item.
+ */
 std::unique_ptr<Item> Item::createRandomItem()
 {
     int r = Utility::randInt(0, 3);
