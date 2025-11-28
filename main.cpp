@@ -1,5 +1,3 @@
-#include "Utility.h"
-#include "Constants.h"
 #include <iostream>
 #include <string>
 #include <cctype>
@@ -8,7 +6,19 @@
 #include "Utility.h"
 #include "Constants.h"
 
-<<<<<<< HEAD
+/**
+ * @file main.cpp
+ * @brief Entry point for the Fantasy Board Game console application.
+ *
+ * Responsibilities:
+ *  - Set up the game board and player.
+ *  - Handle user input commands (movement, inventory, combat).
+ *  - Manage day/night cycles and game loop.
+ */
+
+/**
+ * @brief Prints a welcome message and basic game commands.
+ */
 static void printWelcome()
 {
     std::cout << "======================================\n";
@@ -17,6 +27,22 @@ static void printWelcome()
     std::cout << "Commands: N,S,E,W (move), L=look, P=pick, D=drop, A=attack, I=inventory, X=exit\n";
 }
 
+/**
+ * @brief Main function for the game.
+ *
+ * Initializes board and player, then enters the game loop handling commands:
+ *  - Movement: N/S/E/W
+ *  - Look: L
+ *  - Pick up item: P
+ *  - Drop item: D
+ *  - Attack enemy: A
+ *  - Show inventory: I
+ *  - Exit: X
+ *
+ * Also updates day/night cycles after a set number of commands.
+ *
+ * @return 0 on normal termination.
+ */
 int main()
 {
     printWelcome();
@@ -31,12 +57,30 @@ int main()
         std::cout << "Invalid board size. Exiting.\n";
         return 0;
     }
-
-    // ask for player's race
     std::string raceStr;
-    std::cout << "Choose your race (Human / Elf / Dwarf / Hobbit / Orc): ";
-    std::cin >> raceStr;
 
+    bool charecheck{false};
+    do{
+    // ask for player's race
+    std::cout << "Enter your character name to choose your race (Human / Elf / Dwarf / Hobbit / Orc): ";
+    std::cin >> raceStr;
+    raceStr[0] = std::toupper(raceStr[0]);
+    for (size_t i = 1; i < raceStr.size(); i++) raceStr[i] = std::tolower(raceStr[i]);
+    if (raceStr == "Human" ||
+        raceStr == "Elf" ||
+        raceStr == "Dwarf" ||
+        raceStr == "Hobbit" ||
+        raceStr == "Orc")
+    {
+        charecheck = true;
+    }
+    else {
+        std::cout << "Invalid race. Please try again.\n";
+    }
+    }while(charecheck == false);
+
+
+    std::cout << "Choosen charecter is "<< raceStr<<std::endl;
     Player player(raceStr, 0, 0);
 
     Board board(width, height);
@@ -69,10 +113,14 @@ int main()
             board.playerPickUp(player);
             break;
         case 'D': {
-            std::unique_ptr<Item> itemToDrop = player.selectItemToDrop();
-            if (itemToDrop) {
-                if (!board.playerDrop(player, std::move(itemToDrop))) {
-                    player.returnDroppedItem(std::move(itemToDrop));
+            auto item = player.selectItemToDrop();
+            if (item) {
+                // Keep a backup raw pointer in case drop fails
+                Item* rawBackup = item.get();
+
+                if (!board.playerDrop(player, std::move(item))) {
+                    // Restore ownership using the backup pointer
+                    player.returnDroppedItem(std::unique_ptr<Item>(rawBackup));
                     std::cout << "Drop failed. Item returned.\n";
                 }
             }
@@ -92,41 +140,20 @@ int main()
         }
 
         if (known) {
-            ++commandCount;
+                ++commandCount;            
+            // Show player's current position
+            std::cout << "You are at (" << player.getX() << ", " << player.getY() << ").\n";
+
             if (commandCount % Constants::COMMANDS_PER_TIME_SWITCH == 0) {
                 Utility::toggleDayNight();
                 bool night = Utility::isNight();
                 std::cout << "Time changed. It is now " << (night ? "Night" : "Day") << ".\n";
-
-                // UPDATE PLAYER ORC STATS HERE
                 player.updateForTime(night);
             }
         }
     }
 
+
     std::cout << "\nGame over. You collected " << player.getGold() << " gold.\n";
-=======
-int main() {
-    int commandCount = 0;
-
-    // Check day/night
-    if (Utility::isDayTime(commandCount)) {
-        std::cout << "It's daytime!" << std::endl;
-    } else {
-        std::cout << "It's nighttime!" << std::endl;
-    }
-
-    // Example: Random placement
-    int randomSquare = Utility::randInt(0, 9);
-    std::cout << "Random square: " << randomSquare << std::endl;
-
-    // Example: Attack chance
-    if (Utility::checkProbability(Constants::HUMAN.attackChance)) {
-        std::cout << "Attack successful!" << std::endl;
-    } else {
-        std::cout << "Attack missed!" << std::endl;
-    }
-
->>>>>>> ac8ef0dba7af62ea9c1214bce3c5fd73d1efd64c
     return 0;
 }

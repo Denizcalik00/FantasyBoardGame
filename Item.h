@@ -1,140 +1,134 @@
-<<<<<<< HEAD
+/**
+ * @file Item.h
+ * @brief Declares the Item abstract base class and ItemType enumeration for all in-game items.
+ *
+ * Items represent all equippable or carriable objects in the game. They modify Character
+ * statistics through applyEffect() and removeEffect(). All concrete items (Weapon, Armour,
+ * Shield, Ring) derive from this class.
+ *
+ * Items are ALWAYS passed, stored, and transferred via std::unique_ptr<Item>, ensuring
+ * exclusive ownership and preventing accidental sharing between characters or board squares.
+ *
+ * The Item class also provides the static factory createRandomItem(), used when the board
+ * is populated randomly during initialization.
+ */
+
 #ifndef ITEM_H
 #define ITEM_H
 
 #include <string>
 #include <memory>
 
-// Forward declare Character to avoid circular include
+// Forward declaration prevents circular include with Character.h
 class Character;
 
 /**
- * Enumeration of possible item types.
+ * @enum ItemType
+ * @brief Enumerates the four required categories of equippable items.
+ *
+ * WEAPON  – Increases attack
+ * ARMOUR  – Increases defence, may reduce attack
+ * SHIELD  – Increases defence, may reduce attack
+ * RING    – Special small items; player may carry multiple rings
  */
 enum class ItemType { WEAPON, ARMOUR, SHIELD, RING };
 
 /**
- * @brief Abstract base class for all items in the game.
+ * @class Item
+ * @brief Abstract base class for all item types (Weapon, Armour, Shield, Ring).
  *
- * Required by assignment:
- *  - Every concrete item modifies character stats through applyEffect/removeEffect.
- *  - Player can carry unbounded items (dynamic container).
- *  - Items are stored and transferred via std::unique_ptr<Item>.
+ * Responsibilities:
+ *  - Store basic metadata (name, weight, type).
+ *  - Apply and remove stat effects on a Character.
+ *  - Allow Player inventory to store items via std::unique_ptr<Item>.
+ *  - Provide Item::createRandomItem() factory for Board population.
  *
- * NOTE:
- *  Board requires a factory to create random items:
- *      Item::createRandomItem()
+ * Assignment requirements satisfied:
+ *  ✔ Abstract base class with virtual methods
+ *  ✔ Dynamic and unbounded inventory via std::vector<std::unique_ptr<Item>>
+ *  ✔ Items adjust stats through modifiers (apply/remove)
+ *  ✔ Smart pointers used for memory safety
  */
 class Item {
 public:
+
     /**
-     * @brief Constructor
-     * @param name   name of item
-     * @param weight weight of item (used for strength limit)
-     * @param type   item category (weapon/armour/shield/ring)
+     * @brief Constructs an Item with a given name, weight, and type.
+     *
+     * @param name   Human-readable name of the item.
+     * @param weight Weight added to player's carried load; compared to strength.
+     * @param type   Category of the item (weapon/armour/shield/ring).
      */
     Item(const std::string &name, int weight, ItemType type)
         : name_(name), weight_(weight), type_(type) {}
 
     virtual ~Item() = default;
 
-    // getters
+    // ---------------------------------------------------------------------
+    // Getters
+    // ---------------------------------------------------------------------
+
+    /// @return The display name of the item.
     std::string getName() const { return name_; }
-    int getWeight()  const { return weight_; }
+
+    /// @return The weight of the item (used for carry capacity).
+    int getWeight() const { return weight_; }
+
+    /// @return The ItemType (used for pickup category restrictions).
     ItemType getType() const { return type_; }
 
+    // ---------------------------------------------------------------------
+    // Core Abstract Behaviour
+    // ---------------------------------------------------------------------
+
     /**
-     * @brief applyEffect
-     * Called when the player picks up the item.
-     * Must modify Character stats.
+     * @brief Applies this item's stat effects to a Character.
+     *
+     * Called when the Character successfully picks up the item.
+     *
+     * Examples:
+     *  - Weapon: increase attack
+     *  - Armour: increase defence, maybe decrease attack
+     *  - Shield: increase defence
+     *  - Ring: modify health or strength
+     *
+     * @param c Reference to Character receiving the effect.
      */
     virtual void applyEffect(Character &c) = 0;
 
     /**
-     * @brief removeEffect
-     * Called when the player drops the item.
-     * Must undo applyEffect.
+     * @brief Removes this item's stat effects from a Character.
+     *
+     * Must reverse whatever applyEffect() did.
+     *
+     * @param c Reference to Character losing the effect.
      */
     virtual void removeEffect(Character &c) = 0;
 
+    // ---------------------------------------------------------------------
+    // Factory
+    // ---------------------------------------------------------------------
+
     /**
-     * @brief createRandomItem()
+     * @brief Creates a random item instance using assignment rules.
      *
-     * Factory used by Board::populateSquare().
+     * Used by Board::populateSquare() to randomly place items.
      *
      * PSEUDOCODE:
-     *   generate random number
-     *   if 0 -> Weapon
-     *   if 1 -> Armour
-     *   if 2 -> Shield
-     *   if 3 -> Ring
-     *   return unique_ptr to new concrete item object
+     * 1. Generate random integer in range [0..3].
+     * 2. If 0 → return unique_ptr<Weapon>(Sword or Dagger).
+     * 3. If 1 → return unique_ptr<Armour>(Plate or Leather).
+     * 4. If 2 → return unique_ptr<Shield>(Large or Small).
+     * 5. If 3 → return unique_ptr<Ring>(RingOfLife or RingOfStrength).
+     *
+     * @return std::unique_ptr<Item> of a concrete item.
      */
     static std::unique_ptr<Item> createRandomItem();
 
 private:
-    std::string name_;
-    int weight_;
-    ItemType type_;
+    std::string name_;  ///< The display name of the item.
+    int weight_;        ///< Weight used for strength-based carry limits.
+    ItemType type_;     ///< Category of item (weapon/armour/shield/ring).
 };
 
 #endif // ITEM_H
-=======
-#ifndef ITEM_H
-#define ITEM_H
-
-
-
-#include <string>
-
-// I include this because I need Character class later.
-// But I only write forward declare here to avoid circular include.
-class Character;
-
-// I use this enum to know what type of item this is.
-// Teacher used enum in lessons so I follow same style.
-enum ItemType
-{
-    WEAPON,
-    ARMOUR,
-    SHIELD,
-    RING
-};
-
-// This is abstract Item class.
-// I do this because we never want to create a normal Item object.
-// We only want specific items (Weapon, Armour etc).
-class Item
-{
-protected:
-    std::string name;
-    int weight;
-    ItemType type;
-
-public:
-    // simple constructor
-    Item(std::string n, int w, ItemType t)
-    {
-        name = n;
-        weight = w;
-        type = t;
-    }
-
-    virtual ~Item() {}
-
-    // basic getter functions
-    std::string getName() { return name; }
-    int getWeight() { return weight; }
-    ItemType getType() { return type; }
-
-    // pure virtual, every child must write own version.
-    // applyEffect means player pick the item
-    virtual void applyEffect(Character &c) = 0;
-
-    // removeEffect means player drop the item
-    virtual void removeEffect(Character &c) = 0;
-};
-
-#endif // ITEM_H
-
->>>>>>> ac8ef0dba7af62ea9c1214bce3c5fd73d1efd64c

@@ -1,20 +1,28 @@
 #include "Character.h"
 #include "Utility.h"
 #include <iostream>
-#include <algorithm>
 
-/*
- PSEUDOCODE - Character::attack(target)
- 1. If target == nullptr or not alive -> print message and return
- 2. Roll attackSuccess(). If fail -> print "miss" and return
- 3. If succeed:
-    a) If target->defenceSuccess() -> call target->handleSuccessfulDefence()
-         reduce target health by returned specialDamage (could be 0)
-    b) else -> damage = this->attack_ - target->defence_; clamp to >=0
-         target->modifyHealth(-damage)
- 4. Print results.
-*/
+/**
+ * @file Character.cpp
+ * @brief Implements the Character class, including attacks, defence, and inventory management.
+ *
+ * Responsibilities:
+ *  - Execute attacks and handle defence success.
+ *  - Manage inventory with item effects.
+ *  - Track health, attack, defence, and strength stats.
+ */
 
+/**
+ * @brief Constructs a Character with specified stats.
+ *
+ * @param raceName Name of the character's race.
+ * @param attack Base attack value.
+ * @param attackChance Probability of a successful attack.
+ * @param defence Base defence value.
+ * @param defenceChance Probability of a successful defence.
+ * @param health Starting health.
+ * @param strength Maximum carry strength.
+ */
 Character::Character(const std::string &raceName,
                      int attack, double attackChance,
                      int defence, double defenceChance,
@@ -26,13 +34,30 @@ Character::Character(const std::string &raceName,
 {
 }
 
+/**
+ * @brief Determines if an attack is successful based on attackChance_.
+ * @return True if the attack succeeds, false otherwise.
+ */
 bool Character::attackSuccess() const {
     return Utility::probability(attackChance_);
 }
+
+/**
+ * @brief Determines if a defence is successful based on defenceChance_.
+ * @return True if the defence succeeds, false otherwise.
+ */
 bool Character::defenceSuccess() const {
     return Utility::probability(defenceChance_);
 }
 
+/**
+ * @brief Executes an attack on a target Character.
+ *
+ * Handles attack success, defence success, normal and special damage,
+ * and prints combat messages.
+ *
+ * @param target Pointer to the target Character. Must be non-null and alive.
+ */
 void Character::attack(Character *target)
 {
     if (!target) {
@@ -50,7 +75,6 @@ void Character::attack(Character *target)
         return;
     }
 
-    // defender may try to defend
     if (target->defenceSuccess()) {
         int specialDamage = target->handleSuccessfulDefence();
         if (specialDamage > 0) {
@@ -61,7 +85,6 @@ void Character::attack(Character *target)
         return;
     }
 
-    // normal damage
     int damage = attack_ - target->defence_;
     if (damage < 0) damage = 0;
     target->modifyHealth(-damage);
@@ -69,17 +92,23 @@ void Character::attack(Character *target)
     std::cout << getName() << " deals " << damage << " damage to " << target->getName() << ".\n";
 }
 
+/**
+ * @brief Attempts to pick up an item and add it to inventory.
+ *
+ * Applies the item's effects if picked up successfully. Respects weight and category constraints.
+ *
+ * @param item Unique pointer to the Item to pick up.
+ * @return True if pickup succeeded, false otherwise.
+ */
 bool Character::pickUp(std::unique_ptr<Item> item)
 {
     if (!item) return false;
 
     int w = item->getWeight();
-    // category rules: only one weapon/armour/shield, many rings allowed
     ItemType t = item->getType();
     if (t != ItemType::RING) {
-        // check if we already have item of this category
         for (const auto &it : inventory_) {
-            if (it->getType() == t) return false; // already have one
+            if (it->getType() == t) return false;
         }
     }
 
@@ -87,18 +116,24 @@ bool Character::pickUp(std::unique_ptr<Item> item)
         return false;
     }
 
-    // apply effect and add to inventory
     item->applyEffect(*this);
     carriedWeight_ += w;
     inventory_.push_back(std::move(item));
     return true;
 }
 
+/**
+ * @brief Removes an item from the inventory by index.
+ *
+ * Reverses the item's effect and updates carried weight.
+ *
+ * @param index Index of the item to remove.
+ * @return Unique pointer to the removed item, or nullptr if index invalid.
+ */
 std::unique_ptr<Item> Character::removeItem(size_t index)
 {
     if (index >= inventory_.size()) return nullptr;
     std::unique_ptr<Item> taken = std::move(inventory_[index]);
-    // remove effect
     taken->removeEffect(*this);
     carriedWeight_ -= taken->getWeight();
     if (carriedWeight_ < 0) carriedWeight_ = 0;
@@ -106,19 +141,25 @@ std::unique_ptr<Item> Character::removeItem(size_t index)
     return taken;
 }
 
+/**
+ * @brief Re-adds an item to inventory.
+ *
+ * Applies the item's effect and updates carried weight. Will not add if capacity exceeded.
+ *
+ * @param item Unique pointer to the Item to re-add.
+ */
 void Character::addItemBack(std::unique_ptr<Item> item)
 {
     if (!item) return;
-    // ensure capacity
-    if (carriedWeight_ + item->getWeight() > strength_) {
-        // cannot re-add
-        return;
-    }
+    if (carriedWeight_ + item->getWeight() > strength_) return;
     item->applyEffect(*this);
     carriedWeight_ += item->getWeight();
     inventory_.push_back(std::move(item));
 }
 
+/**
+ * @brief Prints the inventory contents and total weight carried.
+ */
 void Character::printInventory() const
 {
     std::cout << "Inventory (" << inventory_.size() << ") weight " << carriedWeight_ << "/" << strength_ << ":\n";
